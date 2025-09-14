@@ -169,7 +169,7 @@
             
             if (filePath) {
                 // 修复3：直接从raw.githubusercontent获取
-                fetch(`https://raw.githubusercontent.com/${repoOwner}/${repoName}/main/${filePath}`)
+                fetch(`https://raw.githubusercontent.com/${1ningbo1}/${blog}/main/${filePath}`)
                     .then(response => {
                         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                         return response.text();
