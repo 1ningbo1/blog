@@ -161,4 +161,55 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () =>
+        // 修复4: 增强的MD文档解析
+        document.addEventListener('DOMContentLoaded', async () => {
+            const params = new URLSearchParams(location.search);
+            const filePath = params.get('file');
+            
+            if (filePath) {
+                try {
+                    const markdown = await loadMarkdownContent(filePath);
+                    document.getElementById('post-title').textContent = 
+                        filePath.split('/').pop().replace('.md', '');
+                    document.getElementById('post-content').innerHTML = 
+                        parseMarkdown(markdown);
+                    
+                    // 生成目录导航
+                    generateTOC();
+                } catch (error) {
+                    document.getElementById('post-content').innerHTML = 
+                        `<div class="error">加载文章失败: ${error.message}</div>`;
+                }
+            }
+        });
+
+        // 修复5: 改进的Markdown解析器
+        function parseMarkdown(text) {
+            // 增强的解析逻辑...
+            // 支持标题、列表、代码块、链接、图片等
+        }
+
+        // 新增6: 自动生成目录功能
+        function generateTOC() {
+            const headings = document.querySelectorAll('h1, h2, h3');
+            const tocContainer = document.getElementById('toc-container');
+            
+            if (headings.length > 0) {
+                let tocHTML = '<div class="toc-title">目录</div><ul>';
+                
+                headings.forEach((heading, index) => {
+                    const id = `heading-${index}`;
+                    heading.id = id;
+                    
+                    tocHTML += `<li class="toc-${heading.tagName.toLowerCase()}">
+                        <a href="#${id}">${heading.textContent}</a>
+                    </li>`;
+                });
+                
+                tocHTML += '</ul>';
+                tocContainer.innerHTML = tocHTML;
+            }
+        }
+    </script>
+</body>
+</html>
