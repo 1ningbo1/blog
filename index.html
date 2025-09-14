@@ -1,6 +1,3 @@
-
-<!DOCTYPE html>
-<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -216,82 +213,144 @@
         </div>
         
         <footer>
-            <p>© 2023 GitHub Markdown博客 - 由GitHub Pages驱动</p>
+            <p>© 2023 GitHub Markdown博客nb - 由GitHub Pages驱动</p>
         </footer>
     </div>
 
     <script>
-        // 修复后的核心加载逻辑
-        const repoOwner = '1ningbo1	';
+        // 原生JS实现所有功能
+        const repoOwner = '1ningbo1';
         const repoName = 'blog';
         const postsPath = 'posts';
         const categories = {};
         let searchIndex = [];
 
-        // 修复1: 增强的目录加载功能
+        // 主加载函数
         async function loadPosts() {
             try {
-                const response = await fetch(`https://api.github.com/repos/${repoOwner}/${repoName}/contents/${postsPath}?ref=main`, {
-                    headers: {
-                        'Accept': 'application/vnd.github.v3+json',
-                        'Authorization': 'token YOUR_GITHUB_TOKEN' // 可选，提高API限制
-                    }
-                });
-                
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                
+                const response = await fetch(`https://api.github.com/repos/${repoOwner}/${repoName}/contents/${postsPath}`);
                 const files = await response.json();
                 renderPosts(files);
                 initSearchIndex(files);
             } catch (error) {
                 console.error('加载失败:', error);
-                document.getElementById('posts-container').innerHTML = 
-                    `<div class="error-message">加载文章失败: ${error.message}</div>`;
             }
         }
 
-        // 修复2: 改进的目录渲染
+        // 渲染文章列表
         function renderPosts(files) {
-            const postsContainer = document.getElementById('posts-container');
-            const categoryList = document.getElementById('category-list');
-            
-            postsContainer.innerHTML = '';
-            categoryList.innerHTML = '<li class="category-item active" data-category="all">全部文章</li>';
-            
-            // 处理目录结构
+            const container = document.getElementById('posts-container');
+            container.innerHTML = '';
+
             files.forEach(file => {
-                if (file.type === 'dir') {
-                    // 处理子目录
-                    const categoryItem = document.createElement('li');
-                    categoryItem.className = 'category-item';
-                    categoryItem.textContent = file.name;
-                    categoryItem.dataset.category = file.name;
-                    categoryItem.addEventListener('click', () => filterByCategory(file.name));
-                    categoryList.appendChild(categoryItem);
-                } else if (file.name.endsWith('.md')) {
-                    // 处理MD文件
-                    const fileName = file.name.replace('.md', '');
-                    const category = file.path.split('/')[1] || '未分类';
-                    
-                    if (!categories[category]) {
-                        categories[category] = [];
-                    }
+                if (file.name.endsWith('.md')) {
+                    const category = extractCategory(file.name);
+                    if (!categories[category]) categories[category] = [];
                     categories[category].push(file);
+
+                    const postElement = createPostElement(file, category);
+                    container.appendChild(postElement);
                 }
+            });
+
+            renderCategories();
+        }
+
+        // 创建分类导航
+        function renderCategories() {
+            const list = document.getElementById('category-list');
+            list.innerHTML = '<li class="category-item" onclick="showAllPosts()">全部文章</li>';
+
+            Object.keys(categories).forEach(category => {
+                const item = document.createElement('li');
+                item.className = 'category-item';
+                item.textContent = `${category} (${categories[category].length})`;
+                item.onclick = () => filterByCategory(category);
+                list.appendChild(item);
             });
         }
 
-        // 修复3: 增强的MD解析功能
-        async function loadMarkdownContent(path) {
-            try {
-                const response = await fetch(`https://raw.githubusercontent.com/${repoOwner}/${repoName}/main/${path}`);
-                if (!response.ok) throw new Error(`Failed to load ${path}`);
-                return await response.text();
-            } catch (error) {
-                console.error('加载MD内容失败:', error);
-                return `# 加载失败\n\n无法加载文章内容: ${error.message}`;
+        // 搜索功能实现
+        async function initSearchIndex(files) {
+            searchIndex = await Promise.all(files.map(async file => {
+                if (file.name.endsWith('.md')) {
+                    const response = await fetch(`https://raw.githubusercontent.com/${repoOwner}/${repoName}/main/${file.path}`);
+                    const content = await response.text();
+                    return { name: file.name, path: file.path, content };
+                }
+                return null;
+            }));
+            searchIndex = searchIndex.filter(Boolean);
+
+            document.getElementById('search-input').oninput = handleSearch;
+        }
+
+        function handleSearch(e) {
+            const query = e.target.value.toLowerCase();
+            const resultsContainer = document.getElementById('search-results');
+            
+            if (query.length < 2) {
+                resultsContainer.style.display = 'none';
+                return;
+            }
+
+            const results = searchIndex.filter(item => 
+                item.name.toLowerCase().includes(query) || 
+                item.content.toLowerCase().includes(query)
+            ).slice(0, 5);
+
+            if (results.length > 0) {
+                resultsContainer.innerHTML = results.map(result => `
+                    <div onclick="window.location='post.html?file=${result.path}'">
+                        <div>${result.name.replace('.md', '')}</div>
+                        <div>${result.content.substring(0, 100)}...</div>
+                    </div>
+                `).join('');
+                resultsContainer.style.display = 'block';
+            } else {
+                resultsContainer.innerHTML = '<div>没有结果</div>';
+                resultsContainer.style.display = 'block';
             }
         }
+
+        // 辅助函数
+        function extractCategory(filename) {
+            const parts = filename.split('-');
+            return parts.length > 1 ? parts[0] : '未分类';
+        }
+
+        function createPostElement(file, category) {
+            const element = document.createElement('div');
+            element.className = 'post-card';
+            element.innerHTML = `
+                <div>
+                    <span>${category}</span>
+                    <h2>${file.name.replace('.md', '').replace(`${category}-`, '')}</h2>
+                    <a href="post.html?file=${file.path}">阅读全文</a>
+                </div>
+            `;
+            return element;
+        }
+
+        window.filterByCategory = function(category) {
+            const container = document.getElementById('posts-container');
+            container.innerHTML = '';
+            categories[category].forEach(file => {
+                container.appendChild(createPostElement(file, category));
+            });
+        };
+
+        window.showAllPosts = function() {
+            const container = document.getElementById('posts-container');
+            container.innerHTML = '';
+            Object.values(categories).flat().forEach(file => {
+                const category = extractCategory(file.name);
+                container.appendChild(createPostElement(file, category));
+            });
+        };
+
+        // 初始化加载
+        document.addEventListener('DOMContentLoaded', loadPosts);
     </script>
 </body>
 </html>
