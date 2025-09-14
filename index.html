@@ -229,15 +229,14 @@
         let searchIndex = [];
 
         // 主加载函数
-        async function loadPosts() {
-            try {
-                const response = await fetch(/repos/${repoOwner}/${repoName}/contents/${postsPath});
-                const files = await response.json();
-                renderPosts(files);
-                initSearchIndex(files);
-            } catch (error) {
-                console.error('加载失败:', error);
-            }
+        async function fetchRepoData(path) {
+        // 优先尝试相对路径
+        try {
+        const localRes = await fetch(/repos/${path});
+        if(localRes.ok) return localRes;
+        } catch(e) {}
+        // 回退到CDN方案
+        return fetch(https://cdn.jsdelivr.net/gh/${repoOwner}/${repoName}@latest/${path});
         }
 
         // 渲染文章列表
