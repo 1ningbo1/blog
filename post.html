@@ -26,7 +26,7 @@
         const filePath = params.get('file');
         
         if (filePath) {
-            const rawUrl = `https://raw.githubusercontent.com/您的GitHub用户名/您的仓库名/main/${filePath}`;
+            const rawUrl = `https://raw.githubusercontent.com/1ningbo1/blog/main/${filePath}`;
             
             fetch(rawUrl)
                 .then(response => response.text())
@@ -44,3 +44,4 @@
     <script src="https://cdn.jsdelivr.net/npm/showdown@2.1.0/dist/showdown.min.js"></script>
 </body>
 </html>
+
