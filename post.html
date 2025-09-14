@@ -1,0 +1,46 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文章详情</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/github-markdown-css@4.0.0/github-markdown.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <div class="text-right mb-4">
+            <a href="index.html" class="text-blue-500 hover:text-blue-700">← 返回首页</a>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-md overflow-hidden p-6">
+            <div id="post-content" class="markdown-body">
+                <!-- Markdown内容将通过JS动态加载 -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const filePath = params.get('file');
+        
+        if (filePath) {
+            const rawUrl = `https://raw.githubusercontent.com/您的GitHub用户名/您的仓库名/main/${filePath}`;
+            
+            fetch(rawUrl)
+                .then(response => response.text())
+                .then(markdown => {
+                    // 使用marked.js解析Markdown
+                    document.getElementById('post-content').innerHTML = 
+                        new showdown.Converter().makeHtml(markdown);
+                })
+                .catch(error => {
+                    document.getElementById('post-content').innerHTML = 
+                        `<p class="text-red-500">加载文章失败: ${error.message}</p>`;
+                });
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/showdown@2.1.0/dist/showdown.min.js"></script>
+</body>
+</html>
