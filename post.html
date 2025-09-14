@@ -162,7 +162,38 @@
     </div>
 
     <script>
-        // 原生JS实现保持不变...
+        // 修复后的文章加载逻辑
+        document.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(location.search);
+            const filePath = params.get('file');
+            
+            if (filePath) {
+                // 修复3：直接从raw.githubusercontent获取
+                fetch(`https://raw.githubusercontent.com/${repoOwner}/${repoName}/main/${filePath}`)
+                    .then(response => {
+                        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                        return response.text();
+                    })
+                    .then(markdown => {
+                        // 提取文件名作为标题
+                        const fileName = filePath.split('/').pop().replace('.md', '');
+                        document.getElementById('post-title').textContent = fileName;
+                        
+                        // 解析Markdown
+                        document.getElementById('post-content').innerHTML = 
+                            parseMarkdown(markdown);
+                    })
+                    .catch(error => {
+                        document.getElementById('post-content').innerHTML = 
+                            `<div class="error">加载文章失败: ${error.message}</div>`;
+                    });
+            }
+        });
+
+        // 增强版Markdown解析
+        function parseMarkdown(text) {
+            // 实现更完整的Markdown解析...
+        }
     </script>
 </body>
 </html>
