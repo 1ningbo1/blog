@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nb’s Blog</title>
+    <title>GitHub Markdown博客</title>
     <style>
         :root {
             --primary: #3182ce;
@@ -194,7 +194,7 @@
     <div class="container">
         <header>
             <div class="header-content">
-                <h1>Nb’s Blog</h1>
+                <h1>GitHub Markdown博客</h1>
                 <div class="search-container">
                     <input type="text" id="search-input" placeholder="搜索文章...">
                     <div id="search-results"></div>
@@ -216,144 +216,167 @@
         </div>
         
         <footer>
-            <p>© 2024 Nb’s Blog - 由GitHub Pages 驱动 - EdgeOne Pages 提供加速</p>
+            <p>© 2023 GitHub Markdown博客 - 由GitHub Pages驱动</p>
         </footer>
     </div>
 
     <script>
-        // 原生JS实现所有功能
         const repoOwner = '1ningbo1';
         const repoName = 'blog';
         const postsPath = 'posts';
         const categories = {};
         let searchIndex = [];
 
-        // 主加载函数
+        document.addEventListener('DOMContentLoaded', () => {
+            loadPosts();
+            setupSearch();
+        });
+
         async function loadPosts() {
             try {
-                const response = await fetch(`https://api.github.com/repos/${repoOwner}/${repoName}/contents/${postsPath}`);
+                const response = await fetch(`https://api.github.com/repos/${repoOwner}/${repoName}/contents/${postsPath}`, {
+                    headers: {
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                });
+                
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                
                 const files = await response.json();
                 renderPosts(files);
                 initSearchIndex(files);
             } catch (error) {
                 console.error('加载失败:', error);
+                document.getElementById('posts-container').innerHTML = 
+                    `<div class="error-message">加载文章失败: ${error.message}</div>`;
             }
         }
 
-        // 渲染文章列表
         function renderPosts(files) {
-            const container = document.getElementById('posts-container');
-            container.innerHTML = '';
-
+            const postsContainer = document.getElementById('posts-container');
+            const categoryList = document.getElementById('category-list');
+            
+            postsContainer.innerHTML = '';
+            categoryList.innerHTML = '';
+            
             files.forEach(file => {
                 if (file.name.endsWith('.md')) {
-                    const category = extractCategory(file.name);
-                    if (!categories[category]) categories[category] = [];
+                    const fileName = file.name.replace('.md', '');
+                    const category = file.path.split('/')[1] || '未分类';
+                    
+                    if (!categories[category]) {
+                        categories[category] = [];
+                        const categoryItem = document.createElement('li');
+                        categoryItem.textContent = category;
+                        categoryItem.className = 'category-item';
+                        categoryItem.addEventListener('click', () => filterByCategory(category));
+                        categoryList.appendChild(categoryItem);
+                    }
+                    
                     categories[category].push(file);
-
-                    const postElement = createPostElement(file, category);
-                    container.appendChild(postElement);
+                    
+                    const postCard = document.createElement('div');
+                    postCard.className = 'post-card';
+                    postCard.innerHTML = `
+                        <div class="post-content">
+                            <span class="post-category">${category}</span>
+                            <h2 class="post-title">${fileName}</h2>
+                            <p class="post-excerpt">点击查看完整文章内容...</p>
+                            <a href="post.html?file=${file.path}" class="read-more">阅读全文 →</a>
+                        </div>
+                    `;
+                    postsContainer.appendChild(postCard);
                 }
             });
-
-            renderCategories();
         }
 
-        // 创建分类导航
-        function renderCategories() {
-            const list = document.getElementById('category-list');
-            list.innerHTML = '<li class="category-item" onclick="showAllPosts()">全部文章</li>';
-
-            Object.keys(categories).forEach(category => {
-                const item = document.createElement('li');
-                item.className = 'category-item';
-                item.textContent = `${category} (${categories[category].length})`;
-                item.onclick = () => filterByCategory(category);
-                list.appendChild(item);
+        function filterByCategory(category) {
+            const categoryItems = document.querySelectorAll('.category-item');
+            categoryItems.forEach(item => {
+                item.classList.toggle('active', item.textContent === category);
+            });
+            
+            const postsContainer = document.getElementById('posts-container');
+            postsContainer.innerHTML = '';
+            
+            categories[category].forEach(file => {
+                const fileName = file.name.replace('.md', '');
+                const postCard = document.createElement('div');
+                postCard.className = 'post-card';
+                postCard.innerHTML = `
+                    <div class="post-content">
+                        <span class="post-category">${category}</span>
+                        <h2 class="post-title">${fileName}</h2>
+                        <p class="post-excerpt">点击查看完整文章内容...</p>
+                        <a href="post.html?file=${file.path}" class="read-more">阅读全文 →</a>
+                    </div>
+                `;
+                postsContainer.appendChild(postCard);
             });
         }
 
-        // 搜索功能实现
         async function initSearchIndex(files) {
             searchIndex = await Promise.all(files.map(async file => {
                 if (file.name.endsWith('.md')) {
-                    const response = await fetch(`https://raw.githubusercontent.com/${repoOwner}/${repoName}/main/${file.path}`);
-                    const content = await response.text();
-                    return { name: file.name, path: file.path, content };
+                    try {
+                        const response = await fetch(`https://raw.githubusercontent.com/${repoOwner}/${repoName}/main/${file.path}`);
+                        if (!response.ok) throw new Error(`Failed to load ${file.name}`);
+                        const content = await response.text();
+                        return { 
+                            name: file.name.replace('.md', ''), 
+                            path: file.path, 
+                            content: content
+                        };
+                    } catch (e) {
+                        console.error(`Error loading ${file.name}:`, e);
+                        return null;
+                    }
                 }
                 return null;
             }));
             searchIndex = searchIndex.filter(Boolean);
-
-            document.getElementById('search-input').oninput = handleSearch;
         }
 
-        function handleSearch(e) {
-            const query = e.target.value.toLowerCase();
-            const resultsContainer = document.getElementById('search-results');
+        function setupSearch() {
+            const searchInput = document.getElementById('search-input');
+            const searchResults = document.getElementById('search-results');
             
-            if (query.length < 2) {
-                resultsContainer.style.display = 'none';
-                return;
-            }
-
-            const results = searchIndex.filter(item => 
-                item.name.toLowerCase().includes(query) || 
-                item.content.toLowerCase().includes(query)
-            ).slice(0, 5);
-
-            if (results.length > 0) {
-                resultsContainer.innerHTML = results.map(result => `
-                    <div onclick="window.location='post.html?file=${result.path}'">
-                        <div>${result.name.replace('.md', '')}</div>
-                        <div>${result.content.substring(0, 100)}...</div>
-                    </div>
-                `).join('');
-                resultsContainer.style.display = 'block';
-            } else {
-                resultsContainer.innerHTML = '<div>没有结果</div>';
-                resultsContainer.style.display = 'block';
-            }
-        }
-
-        // 辅助函数
-        function extractCategory(filename) {
-            const parts = filename.split('-');
-            return parts.length > 1 ? parts[0] : '未分类';
-        }
-
-        function createPostElement(file, category) {
-            const element = document.createElement('div');
-            element.className = 'post-card';
-            element.innerHTML = `
-                <div>
-                    <span>${category}</span>
-                    <h2>${file.name.replace('.md', '').replace(`${category}-`, '')}</h2>
-                    <a href="post.html?file=${file.path}">阅读全文</a>
-                </div>
-            `;
-            return element;
-        }
-
-        window.filterByCategory = function(category) {
-            const container = document.getElementById('posts-container');
-            container.innerHTML = '';
-            categories[category].forEach(file => {
-                container.appendChild(createPostElement(file, category));
+            searchInput.addEventListener('input', () => {
+                const query = searchInput.value.toLowerCase();
+                
+                if (query.length < 2) {
+                    searchResults.style.display = 'none';
+                    return;
+                }
+                
+                const results = searchIndex.filter(item => 
+                    item.name.toLowerCase().includes(query) || 
+                    item.content.toLowerCase().includes(query)
+                ).slice(0, 5);
+                
+                if (results.length > 0) {
+                    searchResults.innerHTML = results.map(result => 
+                        `<div class="search-result-item" data-path="${result.path}">${result.name}</div>`
+                    ).join('');
+                    searchResults.style.display = 'block';
+                    
+                    document.querySelectorAll('.search-result-item').forEach(item => {
+                        item.addEventListener('click', () => {
+                            window.location.href = `post.html?file=${item.dataset.path}`;
+                        });
+                    });
+                } else {
+                    searchResults.innerHTML = '<div class="search-result-item">无匹配结果</div>';
+                    searchResults.style.display = 'block';
+                }
             });
-        };
-
-        window.showAllPosts = function() {
-            const container = document.getElementById('posts-container');
-            container.innerHTML = '';
-            Object.values(categories).flat().forEach(file => {
-                const category = extractCategory(file.name);
-                container.appendChild(createPostElement(file, category));
+            
+            document.addEventListener('click', (e) => {
+                if (e.target !== searchInput) {
+                    searchResults.style.display = 'none';
+                }
             });
-        };
-
-        // 初始化加载
-        document.addEventListener('DOMContentLoaded', loadPosts);
+        }
     </script>
 </body>
 </html>

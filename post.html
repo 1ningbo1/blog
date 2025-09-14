@@ -6,7 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>文章详情</title>
     <style>
-        /* 共用样式 */
         :root {
             --primary: #3182ce;
             --secondary: #2d3748;
@@ -157,40 +156,9 @@
         </div>
         
         <footer>
-            <p>© 2024 Nb’s Blog - 由GitHub Pages 驱动 - EdgeOne Pages 提供加速</p>
+            <p>© 2023 GitHub Markdown博客 - 由GitHub Pages驱动</p>
         </footer>
     </div>
 
     <script>
-        // 原生Markdown解析器
-        function parseMarkdown(text) {
-            // 简化版Markdown解析逻辑
-            return text
-                .replace(/^# (.*$)/gm, '<h1>$1</h1>')
-                .replace(/^## (.*$)/gm, '<h2>$1</h2>')
-                .replace(/`([^`]+)`/g, '<code>$1</code>')
-                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                .replace(/!\[(.*?)\]\((.*?)\)/g, '<img alt="$1" src="$2">')
-                .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>')
-                .replace(/\n\n/g, '</p><p>')
-                .replace(/\n/g, '<br>');
-        }
-
-        const params = new URLSearchParams(location.search);
-        const filePath = params.get('file');
-        
-        if (filePath) {
-            fetch(`https://raw.githubusercontent.com/1ningbo1/blog/main/${filePath}`)
-                .then(r => r.text())
-                .then(t => {
-                    document.getElementById('post-content').innerHTML = parseMarkdown(t);
-                    document.title = filePath.split('/').pop().replace('.md', '') + ' - 博客';
-                })
-                .catch(e => {
-                    document.getElementById('post-content').innerHTML = '加载失败: ' + e.message;
-                });
-        }
-    </script>
-</body>
-</html>
+        document.addEventListener('DOMContentLoaded', () =>
