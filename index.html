@@ -231,7 +231,7 @@
         // 主加载函数
         async function loadPosts() {
             try {
-                const response = await fetch(`./${postsPath}`);
+                const response = await fetch(/repos/${repoOwner}/${repoName}/contents/${postsPath});
                 const files = await response.json();
                 renderPosts(files);
                 initSearchIndex(files);
