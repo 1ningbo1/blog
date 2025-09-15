@@ -7,6 +7,8 @@ jobs:
       - uses: actions/checkout@v2
       - name: Generate index
         run: |
+      # 安装必要的工具
+      sudo apt-get install -y jq
       # 创建空的list.json结构
       echo '{"posts":[]}' > posts/list.json
       
