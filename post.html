@@ -2,11 +2,8 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>文章详情</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/github-markdown-css@5.1.0/github-markdown.min.css" rel="stylesheet">
+    <!-- 保留原有meta和样式 -->
+    <!-- 新增Prism代码高亮 -->
     <link href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
     <style>
         .markdown-body pre {
@@ -24,24 +21,7 @@
         }
     </style>
 </head>
-<body class="bg-gray-50">
-    <div class="container mx-auto px-4 py-6 max-w-4xl">
-        <!-- 返回按钮 -->
-        <div class="mb-6">
-            <a href="index.html" class="inline-flex items-center text-blue-500 hover:text-blue-700">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
-                </svg>
-                返回博客首页
-            </a>
-        </div>
-
-        <!-- 文章内容 -->
-        <article class="bg-white rounded-lg shadow-sm overflow-hidden">
-            <div id="post-loading" class="p-8 text-center">
-                <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
-                <p class="mt-4 text-gray
-                    
+<body>
     <!-- 保留原有结构 -->
     <div id="post-content" class="markdown-body p-6"></div>
     <div id="post-loading" class="hidden">
