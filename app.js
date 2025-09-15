@@ -107,44 +107,111 @@ function renderCategories() {
     });
 }
 
-// 渲染文章列表
-function renderPosts() {
-    const postsContainer = document.getElementById('posts-container');
-    const startIdx = (currentPage - 1) * config.postsPerPage;
-    const endIdx = startIdx + config.postsPerPage;
-    const postsToShow = allPosts.slice(startIdx, endIdx);
 
-    postsContainer.innerHTML = '';
+// 增强的文章加载函数
+async function loadPostContent(slug) {
+    try {
+        // 优先尝试CDN加速源
+        let response = await fetchWithTimeout(
+            `${config.cdnBaseUrl}/${config.repoOwner}/${config.repoName}@main/${config.postsPath}/${slug}.md`,
+            { timeout: 5000 }
+        );
+        
+        // CDN失败时回退到原始GitHub源
+        if (!response.ok) {
+            response = await fetchWithTimeout(
+                `${config.fallbackUrl}/${config.repoOwner}/${config.repoName}/main/${config.postsPath}/${slug}.md`,
+                { timeout: 8000 }
+            );
+        }
 
-    if (postsToShow.length === 0) {
-        postsContainer.innerHTML = '<div class="p-8 text-center text-gray-500">暂无文章</div>';
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        
+        return await response.text();
+    } catch (error) {
+        console.error('加载文章内容失败:', error);
+        throw error; // 向上抛出错误以便调用方处理
+    }
+}
+
+// 带超时的fetch封装
+function fetchWithTimeout(url, { timeout = 8000 } = {}) {
+    return Promise.race([
+        fetch(url),
+        new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('请求超时')), timeout)
+        )
+    ]);
+}
+
+// 增强的错误处理
+async function renderPost() {
+    const params = new URLSearchParams(window.location.search);
+    const slug = params.get('slug');
+    
+    if (!slug) {
+        showError('缺少文章标识参数');
         return;
     }
 
-    postsToShow.forEach(post => {
-        const postElement = document.createElement('article');
-        postElement.className = 'p-6 hover:bg-gray-50 transition-colors';
-        postElement.innerHTML = `
-            <div class="flex items-start">
-                <div class="flex-1">
-                    <div class="flex items-center space-x-2 mb-2">
-                        <span class="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full">${post.category || '未分类'}</span>
-                        <time class="text-xs text-gray-500">${post.date || ''}</time>
-                    </div>
-                    <h2 class="text-xl font-semibold mb-2">
-                        <a href="post.html?slug=${post.slug}" class="hover:text-blue-600">${post.title}</a>
-                    </h2>
-                    <p class="text-gray-600 mb-3 line-clamp-2">${post.excerpt || ''}</p>
-                    <div class="flex items-center justify-between">
-                        <a href="post.html?slug=${post.slug}" class="text-blue-500 hover:text-blue-700 text-sm">阅读全文 →</a>
-                        <span class="text-xs text-gray-400">${post.readingTime || '3'}分钟阅读</span>
-                    </div>
-                </div>
-                ${post.cover ? `<img src="${post.cover}" alt="${post.title}" class="ml-4 w-24 h-24 object-cover rounded">` : ''}
-            </div>
-        `;
-        postsContainer.appendChild(postElement);
+    try {
+        document.getElementById('post-loading').classList.remove('hidden');
+        
+        const markdown = await loadPostContent(slug);
+        const html = new showdown.Converter({
+            tables: true,
+            tasklists: true,
+            strikethrough: true
+        }).makeHtml(markdown);
+        
+        document.getElementById('post-content').innerHTML = html;
+        document.title = `${slug.replace(/-/g, ' ')} - ${document.title}`;
+        
+        // 高亮代码块
+        if (window.Prism) {
+            Prism.highlightAll();
+        }
+    } catch (error) {
+        showError(`加载文章失败: ${error.message}`);
+    } finally {
+        document.getElementById('post-loading').classList.add('hidden');
+    }
+}
+
+function showError(message) {
+    const errorEl = document.createElement('div');
+    errorEl.className = 'p-4 bg-red-100 text-red-700 rounded-lg';
+    errorEl.innerHTML = `
+        <p class="font-semibold">错误</p>
+        <p>${message}</p>
+        <button onclick="location.reload()" class="mt-2 px-3 py-1 bg-red-500 text-white rounded text-sm">
+            重试
+        </button>
+    `;
+    document.getElementById('post-content').innerHTML = '';
+    document.getElementById('post-content').appendChild(errorEl);
+}
+
+// 初始化
+document.addEventListener('DOMContentLoaded', () => {
+    // 加载必要的polyfill
+    if (!window.Promise) {
+        loadScript('https://cdn.jsdelivr.net/npm/promise-polyfill@8.2.3/dist/polyfill.min.js')
+            .then(renderPost);
+    } else {
+        renderPost();
+    }
+});
+
+function loadScript(src) {
+    return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = src;
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
     });
+}
 
     // 更新分页状态
     updatePagination();
