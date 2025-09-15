@@ -7,5 +7,3 @@ steps:
 - uses: actions/checkout@v2
 - name: Generate index
 run: |
-# 执行生成脚本
-python build_index.py
