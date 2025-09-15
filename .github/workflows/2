@@ -1,0 +1,1 @@
+- name: Generate index   run: |     python -c "from datetime import datetime; print('当前时间:', datetime.now())"  # 环境验证     python generate_index.py || echo "生成失败，但继续流程" 
