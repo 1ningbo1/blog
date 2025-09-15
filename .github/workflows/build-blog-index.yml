@@ -7,33 +7,5 @@ jobs:
       - uses: actions/checkout@v2
       - name: Generate index
         run: |
-      # 安装必要的工具
-      sudo apt-get install -y jq
-      # 创建空的list.json结构
-      echo '{"posts":[]}' > posts/list.json
-      
-      # 遍历posts目录下的md文件
-      for file in posts/*.md; do
-        # 提取front matter信息
-        title=$(grep -m 1 '^title:' "$file" | cut -d '"' -f 2)
-        date=$(grep -m 1 '^date:' "$file" | cut -d '"' -f 2)
-        category=$(grep -m 1 '^category:' "$file" | cut -d '"' -f 2)
-        excerpt=$(grep -m 1 '^excerpt:' "$file" | cut -d '"' -f 2)
-        slug=$(basename "$file" .md)
-        
-        # 添加到list.json
-        jq --arg slug "$slug" \
-           --arg title "$title" \
-           --arg date "$date" \
-           --arg category "$category" \
-           --arg excerpt "$excerpt" \
-           '.posts += [{"slug":$slug,"title":$title,"date":$date,"category":$category,"excerpt":$excerpt}]' \
-           posts/list.json > posts/temp.json && mv posts/temp.json posts/list.json
-      done
-      
-      # 提交变更
-      git config --global user.name "GitHub Actions"
-      git config --global user.email "actions@github.com"
-      git add posts/list.json
-      git commit -m "Auto-generated blog index"
-      git push
+          # 这里添加生成list.json的脚本
+          echo "构建文章索引..."
