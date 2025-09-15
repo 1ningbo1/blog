@@ -1,0 +1,32 @@
+
+name: Build Blog Index
+
+on:
+  push:
+    paths:
+      - 'posts/**'
+      - '.github/workflows/build.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+        
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          
+      - name: Install dependencies
+        run: |
+          pip install pyyaml==6.0 markdown==3.3.7
+          
+      - name: Generate index
+        run: |
+          if [ ! -f "generate_index.py" ]; then
+            echo "Error: generate_index.py not found in repository root"
+            exit 1
+          fi
+          python generate_index.py
