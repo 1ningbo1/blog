@@ -1,13 +1,99 @@
+
 name: Build Blog Index
-on: [push]
+
+on:
+  push:
+    paths:
+      - 'posts/**'
+      - '.github/workflows/build.yml'
+
 jobs:
-build:
-runs-on: ubuntu-latest
-steps:
-- uses: actions/checkout@v2
-- name: Generate index
-run: |
-# 安装依赖
-pip install pyyaml
-# 执行生成脚本
-python build_index.py
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyyaml markdown
+          
+      - name: Generate index
+        run: |
+          python << 'EOF'
+          import os
+          import yaml
+          import markdown
+          from datetime import datetime
+          
+          posts_dir = 'posts'
+          output_file = 'posts/list.json'
+          
+          def parse_markdown(filepath):
+              with open(filepath, 'r', encoding='utf-8') as f:
+                  content = f.read()
+              
+              # Split YAML front matter and content
+              if content.startswith('---'):
+                  _, yaml_content, md_content = content.split('---', 2)
+                  metadata = yaml.safe_load(yaml_content)
+              else:
+                  metadata = {}
+                  md_content = content
+              
+              # Generate excerpt
+              html = markdown.markdown(md_content)
+              excerpt = ' '.join(html.split()[:30]) + '...'
+              
+              return {
+                  'title': metadata.get('title', os.path.splitext(os.path.basename(filepath))[0]),
+                  'slug': os.path.splitext(os.path.basename(filepath))[0],
+                  'date': metadata.get('date', datetime.now().strftime('%Y-%m-%d')),
+                  'category': metadata.get('category', '未分类'),
+                  'excerpt': metadata.get('excerpt', excerpt),
+                  'tags': metadata.get('tags', [])
+              }
+          
+          # Process all markdown files
+          posts = []
+          for root, _, files in os.walk(posts_dir):
+              for file in files:
+                  if file.endswith('.md'):
+                      post = parse_markdown(os.path.join(root, file))
+                      posts.append(post)
+          
+          # Sort by date (newest first)
+          posts.sort(key=lambda x: x['date'], reverse=True)
+          
+          # Generate search index
+          search_index = [{
+              'title': p['title'],
+              'slug': p['slug'],
+              'category': p['category'],
+              'date': p['date'],
+              'content': p['excerpt'],
+              'tags': p['tags']
+          } for p in posts]
+          
+          # Write output files
+          os.makedirs(os.path.dirname(output_file), exist_ok=True)
+          with open(output_file, 'w', encoding='utf-8') as f:
+              json.dump({'posts': posts}, f, ensure_ascii=False, indent=2)
+          
+          with open('posts/search.json', 'w', encoding='utf-8') as f:
+              json.dump(search_index, f, ensure_ascii=False, indent=2)
+          EOF
+          
+      - name: Commit changes
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git add posts/list.json posts/search.json
+          git commit -m "Auto-generated blog index [skip ci]" || echo "No changes to commit"
+          git push
