@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nb's Blog</title>
+    <title>Nb’s Blog</title>
     <style>
         :root {
             --primary: #3182ce;
@@ -194,7 +194,7 @@
     <div class="container">
         <header>
             <div class="header-content">
-                <h1>Nb's Blog</h1>
+                <h1>Nb’s Blog</h1>
                 <div class="search-container">
                     <input type="text" id="search-input" placeholder="搜索文章...">
                     <div id="search-results"></div>
@@ -216,7 +216,7 @@
         </div>
         
         <footer>
-            <p>© 2024 Nb's Blog - 由GitHub Pages 驱动 - EdgeOne Pages 提供加速</p>
+            <p>© 2024 Nb’s Blog - 由GitHub Pages 驱动 - EdgeOne Pages 提供加速</p>
         </footer>
     </div>
 
@@ -229,14 +229,15 @@
         let searchIndex = [];
 
         // 主加载函数
-        async function fetchRepoData(path) {
-        // 优先尝试相对路径
-        try {
-        const localRes = await fetch(/repos/${path});
-        if(localRes.ok) return localRes;
-        } catch(e) {}
-        // 回退到CDN方案
-        return fetch(https://cdn.jsdelivr.net/gh/${repoOwner}/${repoName}@latest/${path});
+        async function loadPosts() {
+            try {
+                const response = await fetch(`https://api.github.com/repos/${repoOwner}/${repoName}/contents/${postsPath}`);
+                const files = await response.json();
+                renderPosts(files);
+                initSearchIndex(files);
+            } catch (error) {
+                console.error('加载失败:', error);
+            }
         }
 
         // 渲染文章列表
@@ -276,7 +277,7 @@
         async function initSearchIndex(files) {
             searchIndex = await Promise.all(files.map(async file => {
                 if (file.name.endsWith('.md')) {
-                    const response = await fetch(`./${file.path}`);
+                    const response = await fetch(`https://raw.githubusercontent.com/${repoOwner}/${repoName}/main/${file.path}`);
                     const content = await response.text();
                     return { name: file.name, path: file.path, content };
                 }
