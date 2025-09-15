@@ -21,6 +21,15 @@
                 padding: 1rem;
             }
         }
+        .loading-spinner {
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #3b82f6;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -38,19 +47,10 @@
         <!-- 文章内容 -->
         <article class="bg-white rounded-lg shadow-sm overflow-hidden">
             <div id="post-loading" class="p-12 text-center">
-                <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
+                <div class="loading-spinner w-12 h-12 mx-auto"></div>
                 <p class="mt-4 text-gray-600">正在加载文章...</p>
             </div>
             <div id="post-content" class="markdown-body hidden"></div>
             <div id="post-error" class="hidden p-8 text-center">
                 <p class="text-red-500 mb-4">加载文章失败，请检查网络连接</p>
-                <button onclick="location.reload()" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
-                    重新加载
-                </button>
-            </div>
-        </article>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/showdown@2.1.0/dist/showdown.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/pr
+                <button onclick="location.reload()" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-
