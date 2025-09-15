@@ -1,12 +1,13 @@
-
 name: Build Blog Index
 on: [push]
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Generate index
-        run: |
-          # 这里添加生成list.json的脚本
-          echo "构建文章索引..."
+build:
+runs-on: ubuntu-latest
+steps:
+- uses: actions/checkout@v2
+- name: Generate index
+run: |
+# 安装依赖
+pip install pyyaml
+# 执行生成脚本
+python build_index.py
