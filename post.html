@@ -9,17 +9,18 @@
     <link href="https://cdn.jsdelivr.net/npm/github-markdown-css@5.1.0/github-markdown.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
     <style>
-        .markdown-body {
-            box-sizing: border-box;
-            min-width: 200px;
-            max-width: 980px;
-            margin: 0 auto;
-            padding: 45px;
+        .markdown-body pre {
+            background: #2d2d2d;
+            border-radius: 6px;
+            padding: 1em;
+            margin: 0.5em 0;
+            overflow: auto;
         }
-        @media (max-width: 767px) {
-            .markdown-body {
-                padding: 15px;
-            }
+        #post-loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
         }
     </style>
 </head>
@@ -40,3 +41,21 @@
             <div id="post-loading" class="p-8 text-center">
                 <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
                 <p class="mt-4 text-gray
+                    
+    <!-- 保留原有结构 -->
+    <div id="post-content" class="markdown-body p-6"></div>
+    <div id="post-loading" class="hidden">
+        <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
+    </div>
+    
+    <!-- 新增底部导航 -->
+    <div class="mt-8 flex justify-between">
+        <a href="#" id="prev-post" class="text-blue-500 hover:text-blue-700">← 上一篇</a>
+        <a href="#" id="next-post" class="text-blue-500 hover:text-blue-700">下一篇 →</a>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/showdown@2.1.0/dist/showdown.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
