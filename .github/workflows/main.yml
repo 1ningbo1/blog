@@ -1,44 +1,27 @@
 
-import os
-import json
-import yaml
-import markdown
-from datetime import datetime
+name: Build Blog Index
 
-def safe_parse_markdown(filepath):
-    try:
-        with open(filepath, 'r', encoding='utf-8') as f:
-            content = f.read()
-        
-        if not content.startswith('---'):
-            raise ValueError("Invalid YAML front matter")
-            
-        _, yaml_part, md_content = content.split('---', 2)
-        metadata = yaml.safe_load(yaml_part)
-        
-        return {
-            'title': metadata.get('title', 'Untitled'),
-            'date': metadata.get('date', datetime.now().strftime('%Y-%m-%d')),
-            'excerpt': metadata.get('excerpt', ' '.join(md_content.split()[:30]) + '...')
-        }
-    except Exception as e:
-        print(f"Error processing {filepath}: {str(e)}")
-        return None
+on:
+  push:
+    paths:
+      - 'posts/**'
+      - '.github/workflows/build.yml'
 
-def generate_index():
-    posts = []
-    for root, _, files in os.walk('posts'):
-        for file in files:
-            if file.endswith('.md'):
-                post = safe_parse_markdown(os.path.join(root, file))
-                if post:
-                    posts.append(post)
+jobs:
+  build:
+    runs-on: ubuntu-latest
     
-    posts.sort(key=lambda x: x['date'], reverse=True)
-    
-    os.makedirs('posts', exist_ok=True)
-    with open('posts/list.json', 'w', encoding='utf-8') as f:
-        json.dump({'posts': posts}, f, indent=2)
-
-if __name__ == '__main__':
-    generate_index()
+    steps:
+      - uses: actions/checkout@v3
+        
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          
+      - name: Install dependencies
+        run: |
+          pip install pyyaml==6.0 markdown==3.3.7
+          
+      - name: Generate index
+        run: python generate_index.py
