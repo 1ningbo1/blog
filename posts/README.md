@@ -20,7 +20,7 @@
 
 ## 自定义设置
 
-- 修改 `index.html` 中的 `repoOwner` 和 `repoName` 变量以匹配你的 GitHub 仓库
+- 修改 `index.html` 中的 `repoOwner`（1ningbo1） 和 `repoName`（blog） 变量以匹配你的 GitHub 仓库
 - 调整 CSS 变量可以自定义颜色方案
 - 修改 `postsPerPage` 变量可以调整每页显示的文章数量
 
