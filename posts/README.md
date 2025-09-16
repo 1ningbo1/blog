@@ -1,6 +1,7 @@
 # Nb's Blog
 
 一个基于 GitHub Pages 的轻量级博客系统，具有分类、搜索和分页功能。
+项目地址：https://github.com/1ningbo1/blog
 
 ## 功能特点
 
